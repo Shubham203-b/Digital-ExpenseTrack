@@ -8,7 +8,7 @@ presplash.filename = %(source.dir)s/data/images/icon.png
 icon.filename = %(source.dir)s/data/images/icon.png
 version = 1.0
 
-requirements = python3,kivy==2.3.1,sqlalchemy,python-dateutil,typing_extensions
+requirements = python3==3.11,kivy==2.3.1,sqlalchemy==1.4.54,python-dateutil,typing_extensions
 
 orientation = portrait
 fullscreen = 0

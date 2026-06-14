@@ -48,8 +48,7 @@ kv = """
     NavDrawerIconButton:
         icon : 'exit-to-app'
         text: "Exit"
-        on_release:
-            app.stop()
+        on_release: root.exit_app()
 
 <NavigationScreen@Screen>
     name: 'NavigationScreen'
@@ -135,3 +134,18 @@ class NavigationScreen(Screen):
                 f_path = os.path.join(data_dir, 'extrac.db')
 
         init_session(f_path)
+
+    def exit_app(self):
+        """Fully kill the app on Android and Desktop."""
+        from kivy.app import App
+        app = App.get_running_app()
+        app.stop()
+        try:
+            # Android - fully kills the process
+            from jnius import autoclass
+            System = autoclass('java.lang.System')
+            System.exit(0)
+        except Exception:
+            # Desktop fallback
+            import os, signal
+            os.kill(os.getpid(), signal.SIGTERM)

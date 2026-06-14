@@ -43,6 +43,14 @@ kv = """
         icon : 'wallet-outline'
         text: "Budget"
 
+    NavigationDrawerDivider:
+
+    NavDrawerIconButton:
+        icon : 'exit-to-app'
+        text: "Exit"
+        on_release:
+            app.stop()
+
 <NavigationScreen@Screen>
     name: 'NavigationScreen'
     nav_layout : nav_layout
@@ -79,7 +87,6 @@ kv = """
             Widget:
                 size_hint: (None, None)
                 size: (0, 0)
-
 """
 
 
@@ -89,16 +96,42 @@ class NavigationScreen(Screen):
     def __init__(self, **kwargs):
         super(NavigationScreen, self).__init__(**kwargs)
         from kivy.app import App
-        import os.path
+        import os
         import shutil
         from dtclasses import init_session
 
         app = App.get_running_app()
-        app_dir = os.path.dirname(os.path.abspath(__file__))
-        f_path = os.path.join(app.user_data_dir, 'extrac.db')
 
-        if os.path.exists(f_path) is False:
-            src_db = os.path.join(app_dir, 'extrac.db')
-            shutil.copyfile(src_db, f_path)
+        # Get correct data directory for Android and Desktop
+        try:
+            # Android: use app.user_data_dir which maps to internal storage
+            data_dir = app.user_data_dir
+        except Exception:
+            data_dir = os.path.dirname(os.path.abspath(__file__))
+
+        f_path = os.path.join(data_dir, 'extrac.db')
+
+        # Find source db - check multiple locations
+        app_dir = os.path.dirname(os.path.abspath(__file__))
+        src_db = os.path.join(app_dir, 'extrac.db')
+
+        # On Android, files are in /data/data/... - try to find it
+        if not os.path.exists(src_db):
+            # Try Android asset path
+            possible = [
+                '/data/data/org.digitalexpensetracker/files/app/extrac.db',
+                os.path.join(os.path.dirname(app_dir), 'extrac.db'),
+            ]
+            for p in possible:
+                if os.path.exists(p):
+                    src_db = p
+                    break
+
+        if not os.path.exists(f_path):
+            if os.path.exists(src_db):
+                shutil.copyfile(src_db, f_path)
+            else:
+                # Create empty db if source not found
+                f_path = os.path.join(data_dir, 'extrac.db')
 
         init_session(f_path)
